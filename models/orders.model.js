@@ -1,15 +1,19 @@
 const { Schema, model } = require('mongoose')
 
+const ObjectId = Schema.ObjectId
+
 const orderSchema = new Schema({
+    id: ObjectId,
     delivery_info: {
         type: Schema.Types.ObjectId,
-        ref: User
+        ref: 'User'
     },
     items: [
-        {
+        [   {
             type: Schema.Types.ObjectId,
-            ref: Item
-        }
+            ref: 'Item'
+            }
+        ]
     ],
     status: { 
         type: String, 

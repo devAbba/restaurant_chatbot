@@ -1,15 +1,47 @@
-var socket = io()
-
-socket.on("connected", function (msg){
-    console.log(msg)
-    outputMessage(msg, 'left')
-    showMenue()
-})
 
 const form = document.getElementById('order-form')
 const input = document.getElementById('order-input')
 const messages = document.getElementById('messages')
 const sessionEnd = document.getElementById('session-control')
+
+var socket = io()
+
+socket.on('welcome', function (msg){
+    outputMessage(msg, 'left')
+    showMenue()
+})
+
+socket.on('main menu', function (){
+    showMenue()
+})
+
+socket.emit('joinRoom', '')
+
+// socket.on("message", function (msg){
+//     console.log(msg)
+//     outputMessage(msg, 'left')
+    
+// })
+
+socket.on('no selections', function (msg){
+    outputMessage(msg, 'left')
+})
+
+socket.on('checkout', function (msg){
+    outputMessage(msg, 'left')
+})
+
+socket.on('confirm order', function (msg){
+    outputMessage(msg, 'left')
+})
+
+socket.on('order confirmed', function (msg){
+    outputMessage(msg, 'left')
+})
+
+socket.on('cancel order', function (msg){
+    outputMessage(msg, 'left')
+})
 
 form.addEventListener('submit', function(e) {
     e.preventDefault();
@@ -20,14 +52,39 @@ form.addEventListener('submit', function(e) {
 });
 
 sessionEnd.addEventListener('click', function(){
-    
     socket.emit("session-end", 'ended session')
-    sessionEnd.style.display = "none"
+    
 })
 
-socket.on('chat message', function(msg) {
+socket.on('user input', function (msg){
    outputMessage(msg, 'right')
+   
 });
+
+socket.on('invalid input', function (msg){
+    outputMessage(msg, 'left')
+})
+
+socket.on('items', function (msg){
+    outputMessage(msg[1], 'left')
+    renderObjects(msg[0])
+})
+
+socket.on('confirm entry', function (msg){
+    console.log(msg)
+    outputMessage(msg[0], 'left')
+    renderObjects(msg[1])
+
+})
+
+socket.on('redo order entry', function (msg){
+    outputMessage(msg, 'left')
+})
+
+socket.on('add order', function (msg){
+    outputMessage(msg, 'left')
+})
+
 
 socket.on('ended-session', function (msg){
     const div = document.createElement('div');
@@ -35,6 +92,7 @@ socket.on('ended-session', function (msg){
     div.innerHTML = `<p>${msg}</p>`
     document.getElementById('messages').appendChild(div);
     window.scrollTo(0, document.body.scrollHeight);
+    sessionEnd.style.display = "none"
 })
 
 function outputMessage (message, className){
@@ -49,8 +107,8 @@ function outputMessage (message, className){
 
 function showMenue (){
     const div = document.createElement('div');
-    div.classList.add('message')
-    div.classList.add('left')
+    div.classList.add('message');
+    div.classList.add('left');
     div.innerHTML = `<ul>
         <li>Select 1 to Place an order</li>
         <li>Select 99 to checkout order</li>
@@ -60,9 +118,27 @@ function showMenue (){
     </ul>`
     document.getElementById('messages').appendChild(div);
     window.scrollTo(0, document.body.scrollHeight);
+
+    socket.emit('main menue', 'main menue displayed')
 }
 
-const tooltips = document.querySelectorAll('.tt')
+function renderObjects (objArray){
+    console.log(objArray)
+    const div = document.createElement('div');
+    div.classList.add('message');
+    div.classList.add('left');
+    div.innerHTML = objArray.map(item => (
+        `<div>
+            <p>${item.name},  price: #${item.price}</p>
+        </div>`
+    )).join('')
+    document.getElementById('messages').appendChild(div);    
+    window.scrollTo(0, document.body.scrollHeight);
+    
+}
+
+const tooltips = document.querySelectorAll('.tt');
 tooltips.forEach(t => {
-    new bootstrap.Tooltip(t)
+    new bootstrap.Tooltip(t);
 })
+

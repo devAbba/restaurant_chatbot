@@ -1,13 +1,24 @@
+const authConnection = function(socket, next) {
+    
+   const req = socket.request
+   if (!req.session.user_info){
+    // socket.emit('ended-session', 'session expired')
+    socket.emit('ended session')
+    socket.disconnect()
+    console.log('session expired')
+
+   }
+   next()
+  };
+
 const authenticate = function (req, res, next){
     if (req.session.user_info){
         next()
     }
     else {
-        // res.redirect('/')
-        res.end()
-        
+        res.redirect('/')
     }
     
 }
 
-module.exports = authenticate
+module.exports = {authConnection, authenticate}
