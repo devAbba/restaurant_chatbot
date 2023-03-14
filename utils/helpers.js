@@ -1,7 +1,20 @@
 const Message = require('./messages')
+const Order = require('../models/orders.model')
+const User = require('../models/users.model');
+const Item = require('../models/items.model');
 
-function handleSelection (){
-    
+
+function handleSelection (socket, myCache, msg){
+    const req = socket.request
+    const user = myCache.get(req.session.user_info)
+    const items = myCache.get('items');
+
+    let chatHistory = []
+    let current_selection = []
+    let current_order = []
+
+    let state = ''
+
     if (state === 'food menu'){
             
         if (msg.indexOf(',') === -1){
@@ -96,12 +109,11 @@ function handleSelection (){
         switch (msg){
             case '1':
                 if(!state){
-                    state = 'food menu'
-                    const itemCache = myCache.get('items')
-                    const items = itemCache.map(item => { 
+                    const itemsTrimmed = items.map(item => { 
                         return {'name': item.name, 'price': item.price}
                     })
-                    socket.emit('items', [items, new Message('bot', 'Here is a list of items you can choose from. \n Make your selection by typing out the name of the item as shown below, seperated with commas')])  
+                    socket.emit('items', [itemsTrimmed, new Message('bot', 'Here is a list of items you can choose from. \n Make your selection by typing out the name of the item as shown below, seperated with commas')])  
+                    state = 'food menu'
                 }
                 break;
             case '99':
@@ -136,7 +148,7 @@ function handleSelection (){
                 socket.emit('invalid input', new Message('bot', 'invalid input. Try again'))
 
         }
-    }
+    } 
     
 }
 

@@ -6,24 +6,60 @@ const sessionEnd = document.getElementById('session-control')
 
 var socket = io()
 
+form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (input.value) {
+      socket.emit('chat message', input.value);
+      input.value = '';
+    }
+});
+
+sessionEnd.addEventListener('click', function(){
+    socket.emit("session-end", 'ended session')
+    
+})
+
+socket.emit('joinRoom', '')
+
 socket.on('welcome', function (msg){
     outputMessage(msg, 'left')
     showMenue()
 })
 
+socket.on('user input', function (msg){
+    outputMessage(msg, 'right')    
+});
+ 
+socket.on('invalid input', function (msg){
+    outputMessage(msg, 'left')
+})
+
+
 socket.on('main menu', function (){
     showMenue()
 })
 
-socket.emit('joinRoom', '')
-
-// socket.on("message", function (msg){
-//     console.log(msg)
-//     outputMessage(msg, 'left')
-    
-// })
+socket.on('items', function (msg){
+    outputMessage(msg[1], 'left')
+    renderObjects(msg[0])
+})
 
 socket.on('no selections', function (msg){
+    outputMessage(msg, 'left')
+})
+
+socket.on('confirm entry', function (msg){
+    console.log(msg)
+    outputMessage(msg[0], 'left')
+    renderObjects(msg[1])
+
+})
+
+socket.on('redo order entry', function (msg){
+    outputMessage(msg, 'left')
+})
+
+socket.on('add order', function (msg){
     outputMessage(msg, 'left')
 })
 
@@ -39,49 +75,14 @@ socket.on('order confirmed', function (msg){
     outputMessage(msg, 'left')
 })
 
-socket.on('cancel order', function (msg){
-    outputMessage(msg, 'left')
-})
-
-form.addEventListener('submit', function(e) {
-    e.preventDefault();
-    if (input.value) {
-      socket.emit('chat message', input.value);
-      input.value = '';
-    }
-});
-
-sessionEnd.addEventListener('click', function(){
-    socket.emit("session-end", 'ended session')
-    
-})
-
-socket.on('user input', function (msg){
-   outputMessage(msg, 'right')
-   
-});
-
-socket.on('invalid input', function (msg){
-    outputMessage(msg, 'left')
-})
-
-socket.on('items', function (msg){
-    outputMessage(msg[1], 'left')
-    renderObjects(msg[0])
-})
-
-socket.on('confirm entry', function (msg){
-    console.log(msg)
+socket.on('current order', function (msg){
     outputMessage(msg[0], 'left')
-    renderObjects(msg[1])
-
+    msg[1].forEach(function(order){
+        renderObjects(order)
+    })
 })
 
-socket.on('redo order entry', function (msg){
-    outputMessage(msg, 'left')
-})
-
-socket.on('add order', function (msg){
+socket.on('cancel order', function (msg){
     outputMessage(msg, 'left')
 })
 

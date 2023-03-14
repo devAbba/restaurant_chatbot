@@ -91,15 +91,6 @@ io.on("connection", async (socket) => {
     socket.emit('welcome', new Message('bot', `welcome ${user.name}`))
     chatHistory.push(new Message('bot', `welcome ${user.name}`))
     
-    // socket.on('joinRoom', (name) => {
-    //     socket.join(roomName)
-    //     const user = userJoin(name, roomName)
-    //     const users = getRoomUsers(roomName)
-    //     console.log(users)
-
-    //     io.to(roomName).emit('message', new Message(serverName, `welcome ${name}`))  
-
-    // })
    
     socket.on("chat message", async (msg) => {
         socket.emit("user input", new Message(`${user.name}`, msg))
@@ -167,22 +158,24 @@ io.on("connection", async (socket) => {
            switch (msg.toLowerCase()){
                 case 'yes':
                     
-                    current_order.forEach(async (order) => {
-                        let id = []
-                        order.forEach((item) => id.push(item.id))
-                        const orderToSave = new Order({
-                            delivery_info: user._id,
-                            items: id
-                        })
-                        const savedOrder = await orderToSave.save()
+                    // current_order.forEach(async (order) => {
+                    //     let id = []
+                    //     order.forEach((item) => id.push(item.id))
+                    //     const orderToSave = new Order({
+                    //         delivery_info: user._id,
+                    //         items: id
+                    //     })
+                    //     const savedOrder = await orderToSave.save()
 
-                        const userInDB = await User.findById(user._id);
-                        userInDB.orders = userInDB.orders.concat(savedOrder._id);
+                    //     const userInDB = await User.findById(user._id);
+                    //     userInDB.orders = userInDB.orders.concat(savedOrder._id);
 
-                        await userInDB.save();
-                    })
+                    //     await userInDB.save();
+                    // })
                 
-                    socket.emit('order confirmed', new Message('bot', `Your order has been confirmed and be dispatched to ${user.address}`))
+                    socket.emit('order confirmed', new Message('bot', `Your order has been confirmed and will be dispatched to ${user.address}`))
+                    socket.emit('main menu', 'return to main menu')
+                    state = ''
                     break;
                 case '0':
                     current_order = []
@@ -219,7 +212,7 @@ io.on("connection", async (socket) => {
                                 total += prop.price
                             })
                         })
-                        socket.emit('checkout', new Message('bot', `Your order: #${total} \n Delivery fee: #1000 \n Total: #${total + 1000}`))       
+                        socket.emit('checkout', new Message('bot', `Your order total: #${total} \n Delivery fee: #1000 \n Total: #${total + 1000}`))       
                         socket.emit('confirm order', new Message('bot', 'Confirm order? type \'Yes\' to confirm, 0 to cancel order'))
                         state = 'confirm order'
                     }
@@ -228,6 +221,7 @@ io.on("connection", async (socket) => {
                 case '98':
                     break;
                 case '97':
+                    socket.emit('current order', [new Message('bot', 'Your current order:'), current_order])
                     break;
                 case '0':
                     current_order = []
@@ -240,19 +234,8 @@ io.on("connection", async (socket) => {
     
             }
         }
-        
-        
-
-
-       
+          
     })
-
-    
-    // socket.on("chat message", (msg) => {
-    //     const user = getCurrentUser()
-    //     io.to('roomName').emit('chat message', new Message('username', msg))
-    // })
-    
 
     socket.on("disconnect", () => {
         console.log('client disconnected')
