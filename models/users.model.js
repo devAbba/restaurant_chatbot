@@ -13,10 +13,6 @@ const userSchema = new Schema({
         required: true,
         unique: true
     },
-    address: {
-        type: String,
-        required: true
-    },
     orders: [
         {
             type: Schema.Types.ObjectId,

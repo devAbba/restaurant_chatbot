@@ -6,19 +6,19 @@ const http = require('http');
 const { Server } = require("socket.io");
 const path = require('path');
 const connectDB = require('./database/mongodb');
-const Message = require('./utils/messages');
 require('dotenv').config();
-const { authConnection, authenticate} = require('./middleware/authenticate');
-const { userJoin, getCurrentUser, getRoomUsers } = require('./utils/users')
-
+const authenticate = require('./middleware/authenticate');
+const moment = require('moment');
+const { userJoin, getCurrentUser, getRoomUsers } = require('./utils/users');
 
 const User = require('./models/users.model');
 const Item = require('./models/items.model');
-const Order = require('./models/orders.model')
+const Order = require('./models/orders.model');
+const Message = require('./utils/messages');
+const OrderFormat = require('./utils/orders');
 
 const port = process.env.PORT || 5000
 const mongo_url = process.env.MONGO_URL
-
 
 const handleSelection = require('./utils/helpers');
 const nodeCache = require('node-cache');
@@ -39,12 +39,19 @@ const sessionMiddleware = session({
     store: new MongoStore({mongoUrl: mongo_url})
 });
 
+app.use((error, req, res, next) => {
+    if (error){
+        console.log(error)
+        res.status(500).send("Unexpected error")
+    }
+    next()
+})
+
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 
 app.use(sessionMiddleware);
 io.engine.use(sessionMiddleware);
-io.use(authConnection)
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -71,6 +78,17 @@ app.get('/chat', authenticate, async (req, res) => {
     }
 })
 
+app.on('session:expired', (req) => {
+    console.log('session expired')
+    //Get the socket associated with the request
+    const socket = req.socket;
+    
+    //Emit the socket event
+    socket.emit("ended-session", 'session ended')
+    socket.disconnect()
+    
+});
+
 
 io.on("connection", async (socket) => {
     const req = socket.request
@@ -82,6 +100,8 @@ io.on("connection", async (socket) => {
     let chatHistory = []
     let current_selection = []
     let current_order = []
+    const confirmed_orders = []
+    let address = ''
 
     let state = ''
 
@@ -154,26 +174,28 @@ io.on("connection", async (socket) => {
                     socket.emit('invalid input', new Message('bot', 'invalid input. Try again'))
             }
         }
+        else if (state === 'address'){
+            address = msg
+            socket.emit('confirm order', new Message('bot', 'Confirm order? type \'Yes\' to confirm, 0 to cancel order'))
+            state = 'confirm order'
+        }
         else if (state === 'confirm order'){
            switch (msg.toLowerCase()){
                 case 'yes':
-                    
-                    // current_order.forEach(async (order) => {
-                    //     let id = []
-                    //     order.forEach((item) => id.push(item.id))
-                    //     const orderToSave = new Order({
-                    //         delivery_info: user._id,
-                    //         items: id
-                    //     })
-                    //     const savedOrder = await orderToSave.save()
-
-                    //     const userInDB = await User.findById(user._id);
-                    //     userInDB.orders = userInDB.orders.concat(savedOrder._id);
-
-                    //     await userInDB.save();
-                    // })
+                    const idsArr = current_order.map(order => order.map(({id}) => (id)))
                 
-                    socket.emit('order confirmed', new Message('bot', `Your order has been confirmed and will be dispatched to ${user.address}`))
+                    idsArr.forEach(async (order) => {
+                        orderToSave = new Order({delivery_address: address, items: order})
+                        savedOrder = await orderToSave.save()
+                        confirmed_orders.push(savedOrder._id)
+
+                        const userInDB = await User.findById(user._id);
+                        userInDB.orders = userInDB.orders.concat(savedOrder._id);
+
+                        await userInDB.save();
+                    })
+                
+                    socket.emit('order confirmed', new Message('bot', `Your order has been confirmed and will be dispatched to ${address}`))
                     socket.emit('main menu', 'return to main menu')
                     state = ''
                     break;
@@ -193,13 +215,13 @@ io.on("connection", async (socket) => {
                 case '1':
                     if(!state){
                         state = 'food menu'
-                        const itemCache = myCache.get('items')
-                        const items = itemCache.map(item => { 
+                        const itemsTrimmed = items.map(item => { 
                             return {'name': item.name, 'price': item.price}
                         })
-                        socket.emit('items', [items, new Message('bot', 'Here is a list of items you can choose from. \n Make your selection by typing out the name of the item as shown below, seperated with commas')])  
+                        socket.emit('items', [itemsTrimmed, new Message('bot', 'Here is a list of items you can choose from. \n Make your selection by typing out the name of the item as shown below, seperated with commas')])  
                     }
                     break;
+
                 case '99':
                     if (current_order.length === 0){
                         socket.emit('no selections', new Message('bot', 'you currently do not have any selections. Please place an order before checking out'))
@@ -212,17 +234,44 @@ io.on("connection", async (socket) => {
                                 total += prop.price
                             })
                         })
-                        socket.emit('checkout', new Message('bot', `Your order total: #${total} \n Delivery fee: #1000 \n Total: #${total + 1000}`))       
-                        socket.emit('confirm order', new Message('bot', 'Confirm order? type \'Yes\' to confirm, 0 to cancel order'))
-                        state = 'confirm order'
+                        socket.emit('checkout', new Message('bot', `Your order total: #${total} \n Delivery fee: #1000 \n Total: #${total + 1000}`))
+                        socket.emit('address', new Message('bot', 'Please enter your delivery address'))
+                        state = 'address'
+                        // socket.emit('confirm order', new Message('bot', 'Confirm order? type \'Yes\' to confirm, 0 to cancel order'))
+                        // state = 'confirm order'
+                    }
+                    break;
+
+                case '98':
+                    const ordersInDB = await User.findById(user._id).select('orders')
+                    
+                    if (ordersInDB.orders.length === 0){
+                        socket.emit('message', new Message('bot', 'nothing to display'))
+                        
+                    } else {
+                       
+                        const orderIds = ordersInDB.orders
+                        const order_hist = await Order.find({ _id: { $in: orderIds } }).populate('items', {name: 1, price: 1});
+                        
+                        socket.emit('order history', order_hist)
+                        
                     }
                     
+                    socket.emit('main menu', 'return to main menu')
+
+                    state = ''
                     break;
-                case '98':
-                    break;
+
                 case '97':
-                    socket.emit('current order', [new Message('bot', 'Your current order:'), current_order])
+                    if (current_order.length === 0){ 
+                        socket.emit('current order', new Message('bot', 'Your currently do not have any orders'))
+
+                    } else {
+                        socket.emit('current order', [new Message('bot', 'Your current order:'), current_order])
+                    }
+                    socket.emit('main menu', 'return to main menu')
                     break;
+
                 case '0':
                     current_order = []
                     socket.emit('cancel order', new Message('bot', "Your order has been cancelled"))
@@ -242,7 +291,6 @@ io.on("connection", async (socket) => {
     })
 
     socket.on("session-end", (text) => {
-        console.log(text)
         socket.emit("ended-session", 'session ended')
         socket.disconnect()
         socket.request.session.destroy()

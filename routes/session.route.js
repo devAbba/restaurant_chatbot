@@ -26,8 +26,8 @@ sessionRouter.post('/', async (req, res, next) => {
         
 
     } catch (error){
-        // res.redirect('/')
         console.log(error)
+        res.redirect('/')
     }
 });
 

@@ -1,3 +1,4 @@
+let dateOptions = { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' }
 
 const form = document.getElementById('order-form')
 const input = document.getElementById('order-input')
@@ -19,7 +20,12 @@ sessionEnd.addEventListener('click', function(){
     
 })
 
+
 socket.emit('joinRoom', '')
+
+socket.on('message', function (msg){
+    outputMessage(msg, 'left')
+})
 
 socket.on('welcome', function (msg){
     outputMessage(msg, 'left')
@@ -33,7 +39,6 @@ socket.on('user input', function (msg){
 socket.on('invalid input', function (msg){
     outputMessage(msg, 'left')
 })
-
 
 socket.on('main menu', function (){
     showMenue()
@@ -49,10 +54,8 @@ socket.on('no selections', function (msg){
 })
 
 socket.on('confirm entry', function (msg){
-    console.log(msg)
     outputMessage(msg[0], 'left')
     renderObjects(msg[1])
-
 })
 
 socket.on('redo order entry', function (msg){
@@ -67,6 +70,10 @@ socket.on('checkout', function (msg){
     outputMessage(msg, 'left')
 })
 
+socket.on('address', function (msg){
+    outputMessage(msg, 'left')
+})
+
 socket.on('confirm order', function (msg){
     outputMessage(msg, 'left')
 })
@@ -75,11 +82,34 @@ socket.on('order confirmed', function (msg){
     outputMessage(msg, 'left')
 })
 
+socket.on('order history', function (obj){
+    const dt = new Date(obj[0].createdAt)
+    console.log(dt.toLocaleString('en-US', dateOptions))
+
+    const div = document.createElement('div');
+    div.classList.add('message');
+    div.classList.add('left');
+    div.innerHTML = obj.map(order => (
+        `<div class="history-group">
+            <p>${new Date(order.createdAt).toLocaleDateString('en-us', dateOptions)}</p>
+            <ul>
+            ${order.items.map(item => `<li>${item.name}</li>`).join('')}
+          </ul>
+        </div>`
+    )).join('')
+    document.getElementById('messages').appendChild(div);    
+    window.scrollTo(0, document.body.scrollHeight);
+})
+
 socket.on('current order', function (msg){
-    outputMessage(msg[0], 'left')
-    msg[1].forEach(function(order){
-        renderObjects(order)
-    })
+    if (Array.isArray(msg)){
+        outputMessage(msg[0], 'left')
+        msg[1].forEach(function(order){
+            renderObjects(order)
+        }) 
+    } else {
+        outputMessage(msg, 'left')
+    }
 })
 
 socket.on('cancel order', function (msg){
@@ -124,7 +154,6 @@ function showMenue (){
 }
 
 function renderObjects (objArray){
-    console.log(objArray)
     const div = document.createElement('div');
     div.classList.add('message');
     div.classList.add('left');
