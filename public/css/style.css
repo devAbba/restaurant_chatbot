@@ -114,11 +114,12 @@ body {
 }
 
 .right {
-    color: #f0f0f0;
-    background-color: rgb(42, 59, 109);
+    /* color: #f0f0f0; */
+    background-color: #406799;
     margin-left: auto;
     max-width: 40%;
     border-radius:16px 16px 0 16px;
+    text-align: right;
 }
 
 #messages .end-message {

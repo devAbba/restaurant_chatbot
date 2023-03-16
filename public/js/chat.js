@@ -21,8 +21,6 @@ sessionEnd.addEventListener('click', function(){
 })
 
 
-socket.emit('joinRoom', '')
-
 socket.on('message', function (msg){
     outputMessage(msg, 'left')
 })

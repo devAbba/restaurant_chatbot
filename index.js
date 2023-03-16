@@ -92,32 +92,46 @@ app.on('session:expired', (req) => {
 io.on("connection", async (socket) => {
     const req = socket.request
     const session_id = req.session.id
-    const roomName = session_id
+    
     const user = myCache.get(req.session.user_info)
     const items = myCache.get('items')
 
     let chatHistory = []
    
     console.log('client connected', socket.id);
-
-    socket.emit('welcome', new Message('bot', `welcome ${user.name}`))
-    chatHistory.push(new Message('bot', `welcome ${user.name}`))
     
+    socket.join(session_id)
+    
+
+    const deviceTab = userJoin(socket.id, session_id)
+    const roomUsers = getRoomUsers(session_id)
+    const user1 = roomUsers[0]["username"]
+    
+    // if (io.sockets.adapter.rooms[session_id].length === 1) {
+    //     io.to(session_id).emit('welcome', new Message('bot', `welcome ${user.name}`))
+    //   }
+    
+    if (roomUsers.length === 1){
+        io.to(session_id).emit('welcome', new Message('bot', `welcome ${user.name}`))
+    }
+    // io.to(user1).emit('welcome', new Message('bot', `welcome ${user.name}`))
+    // chatHistory.push(new Message('bot', `welcome ${user.name}`))
+
    
     socket.on("chat message", async (msg) => {
-        socket.emit("user input", new Message(`${user.name}`, msg))
+        io.to(session_id).emit("user input", new Message(`${user.name}`, msg))
         chatHistory.push(new Message(`${user.name}`, msg))
-        handleSelection(socket, msg, items, user);
+        handleSelection(socket, io, msg, items, user);
                   
     })
 
     socket.on("disconnect", () => {
-        console.log('client disconnected')
+        console.log('client disconnected', socket.id)
     })
 
     socket.on("session-end", (text) => {
-        socket.emit("ended-session", 'session ended')
-        socket.disconnect()
+        io.to(session_id).emit("ended-session", 'session ended')
+        socket.disconnect() // change code to disconnect all users in room
         socket.request.session.destroy()
     })
 })
