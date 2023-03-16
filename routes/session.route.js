@@ -5,14 +5,13 @@ const sessionRouter = express.Router();
 
 sessionRouter.post('/', async (req, res, next) => {
     try {
-        const { name, phone, address } = req.body
+        const { name, phone } = req.body
         const userFound = await User.findOne({phone: phone })
 
         if (!userFound){
             const user = new User({
                 name,
-                phone,
-                address
+                phone
             })
     
             const savedUser = await user.save()

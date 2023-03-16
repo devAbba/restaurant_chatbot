@@ -84,7 +84,6 @@ socket.on('order confirmed', function (msg){
 
 socket.on('order history', function (obj){
     const dt = new Date(obj[0].createdAt)
-    console.log(dt.toLocaleString('en-US', dateOptions))
 
     const div = document.createElement('div');
     div.classList.add('message');

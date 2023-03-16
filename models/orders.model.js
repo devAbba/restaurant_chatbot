@@ -4,6 +4,10 @@ const ObjectId = Schema.ObjectId
 
 const orderSchema = new Schema({
     id: ObjectId,
+    createdBy: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    },
     delivery_address: {
         type: String 
     },

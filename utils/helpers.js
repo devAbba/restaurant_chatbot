@@ -4,16 +4,13 @@ const User = require('../models/users.model');
 const Item = require('../models/items.model');
 
 
-function handleSelection (socket, myCache, msg){
-    const req = socket.request
-    const user = myCache.get(req.session.user_info)
-    const items = myCache.get('items');
+let state = ''
+let current_selection = []
+let current_order = []
+let address = ''
 
-    let chatHistory = []
-    let current_selection = []
-    let current_order = []
-
-    let state = ''
+async function handleSelection (socket, msg, items, user){
+    const userId = socket.request.session.user_info
 
     if (state === 'food menu'){
             
@@ -73,26 +70,38 @@ function handleSelection (socket, myCache, msg){
                 socket.emit('invalid input', new Message('bot', 'invalid input. Try again'))
         }
     }
+    else if (state === 'address'){
+        address = msg
+        socket.emit('confirm order', new Message('bot', 'Confirm order? type \'Yes\' to confirm, 0 to cancel order'))
+        state = 'confirm order'
+    }
     else if (state === 'confirm order'){
        switch (msg.toLowerCase()){
             case 'yes':
                 
-                current_order.forEach(async (order) => {
-                    let id = []
-                    order.forEach((item) => id.push(item.id))
-                    const orderToSave = new Order({
-                        delivery_info: user._id,
-                        items: id
-                    })
-                    const savedOrder = await orderToSave.save()
-
-                    const userInDB = await User.findById(user._id);
-                    userInDB.orders = userInDB.orders.concat(savedOrder._id);
-
-                    await userInDB.save();
-                })
+                const idsArr = current_order.map(order => order.map(({id}) => (id)))
             
-                socket.emit('order confirmed', new Message('bot', `Your order has been confirmed and be dispatched to ${user.address}`))
+                try {
+                    const userInDB = await User.findById(userId);
+                    
+                    const orderPromises = idsArr.map(async order => {
+                        const orderToSave = new Order({createdBy: user._id, delivery_address: address, items: order})
+                        const savedOrder = await orderToSave.save()
+                        userInDB.orders = userInDB.orders.concat(savedOrder._id)
+                        
+                    })
+            
+                    const savedOrders = await Promise.all(orderPromises)
+                    await userInDB.save()
+
+                } catch (error){
+                    
+                }
+            
+                socket.emit('order confirmed', new Message('bot', `Your order has been confirmed and will be dispatched to ${address}`))
+                socket.emit('main menu', 'return to main menu')
+                current_order = []
+                state = ''
                 break;
             case '0':
                 current_order = []
@@ -109,6 +118,7 @@ function handleSelection (socket, myCache, msg){
         switch (msg){
             case '1':
                 if(!state){
+                    
                     const itemsTrimmed = items.map(item => { 
                         return {'name': item.name, 'price': item.price}
                     })
@@ -116,6 +126,7 @@ function handleSelection (socket, myCache, msg){
                     state = 'food menu'
                 }
                 break;
+
             case '99':
                 if (current_order.length === 0){
                     socket.emit('no selections', new Message('bot', 'you currently do not have any selections. Please place an order before checking out'))
@@ -128,19 +139,49 @@ function handleSelection (socket, myCache, msg){
                             total += prop.price
                         })
                     })
-                    socket.emit('checkout', new Message('bot', `Your order: #${total} \n Delivery fee: #1000 \n Total: #${total + 1000}`))       
-                    socket.emit('confirm order', new Message('bot', 'Confirm order? type \'Yes\' to confirm, 0 to cancel order'))
-                    state = 'confirm order'
+                    socket.emit('checkout', new Message('bot', `Your order total: #${total} \n Delivery fee: #1000 \n Total: #${total + 1000}`))
+                    socket.emit('address', new Message('bot', 'Please enter your delivery address'))
+                    state = 'address'
+                    
+                }
+                break;
+
+            case '98':
+                const ordersInDB = await User.findById(userId).select('orders')
+                
+                if (ordersInDB.orders.length === 0){
+                    socket.emit('message', new Message('bot', 'nothing to display'))
+                    
+                } else {
+                   
+                    const orderIds = ordersInDB.orders
+                    const order_hist = await Order.find({ _id: { $in: orderIds } }).populate('items', {name: 1, price: 1});
+                    
+                    socket.emit('order history', order_hist)
+                    
                 }
                 
+                socket.emit('main menu', 'return to main menu')
+
+                state = ''
                 break;
-            case '98':
-                break;
+
             case '97':
+                if (current_order.length === 0){ 
+                    socket.emit('current order', new Message('bot', 'Your currently do not have any orders'))
+
+                } else {
+                    socket.emit('current order', [new Message('bot', 'Your current order:'), current_order])
+                }
+                socket.emit('main menu', 'return to main menu')
                 break;
+
             case '0':
-                current_order = []
-                socket.emit('cancel order', new Message('bot', "Your order has been cancelled"))
+                if (current_order.length === 0) socket.emit('message', new Message('bot', 'you have no items in your list'))
+                else{
+                    current_order = []
+                    socket.emit('cancel order', new Message('bot', "Your order has been cancelled"))
+                }
                 socket.emit('main menu', 'return to main menu')
                 state = ''
                 break;
@@ -148,8 +189,7 @@ function handleSelection (socket, myCache, msg){
                 socket.emit('invalid input', new Message('bot', 'invalid input. Try again'))
 
         }
-    } 
-    
+    }
 }
 
 module.exports = handleSelection
