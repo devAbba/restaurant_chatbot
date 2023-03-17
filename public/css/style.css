@@ -18,12 +18,18 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
     transition: ease-in-out 0.5s;
     scroll-behavior: smooth;
-    background: var(--white)
+    background: no-repeat center center; 
+    background-size: cover;
+    background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.5)), url('https://res.cloudinary.com/dnncez2l8/image/upload/v1679088077/stock_images/pexels-team-picsfast-8753672_hrsg0o.jpg');;
+    
 }
 
 .container {
     display: flex;
     justify-content: center;
+    height: 100vh;
+    position: relative;
+    background: transparent;
     
     
 }
@@ -32,8 +38,6 @@ body {
     background: #dff2f5;
     font-family: var(--font);
     position: absolute;
-    margin: 10% auto;
-    width: 500px;
     height: 75%;
     border-radius: 10px 10px 10px 10px;
     display: flex;
@@ -215,7 +219,7 @@ input:-webkit-autofill {
 .form-headline {
     font-size: 1.1rem;
     line-height: 2;
-    color: #444444;
+    color: #f0f0f0;
     margin-bottom: .625rem;
     text-align: center;
 }
@@ -258,6 +262,7 @@ input:-webkit-autofill {
 
 .index-form {
     max-width: 440px;
+    height: fit-content;
     padding: 10px 20px;
     border-radius: 10px;
     margin: 170px auto;
@@ -281,6 +286,18 @@ input:-webkit-autofill {
     font-size: 1.1rem;
 }
 
-.custom-tooltip {
-    --bs-tooltip-bg: var(--bs-primary);
+
+
+@media (max-width: 400px) {
+    .chat-box {
+        width: 90%;
+        margin: 20% auto;
+    }
+}
+
+@media (min-width: 481px){
+    .chat-box {
+        margin: 5% auto;
+        width: 500px;
+    }
 }

@@ -87,7 +87,7 @@ io.on("connection", (socket) => {
         socket.disconnect();
     }
 
-    console.log(`client connected on ${session_id}`, socket.id);
+    console.log(`client ${socket.id} connected`);
 
     if (map.has(session_id)) {
         socket.disconnect()
@@ -115,6 +115,7 @@ io.on("connection", (socket) => {
     })
 
     socket.on('error', function(err) {
+        io.to(session_id).emit("message", new Message('bot', 'unexpected error'))
         console.error('Socket.io Error:', err);
     });
 })
