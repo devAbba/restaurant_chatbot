@@ -12,9 +12,16 @@ let address = ''
 async function handleSelection (socket, io, msg, items, user){
     const userId = socket.request.session.user_info
     const session_id = socket.request.session.id
+    
 
     if (state === 'food menu'){
-            
+        switch (msg.toLowerCase()){
+            case 'start':
+                io.to(session_id).emit('main menu', 'return to main menu')
+                state = ''
+                break;
+            default:
+                  
         if (msg.indexOf(',') === -1){
             const patterns = [new RegExp(msg, 'i')]
         } 
@@ -39,9 +46,15 @@ async function handleSelection (socket, io, msg, items, user){
             state = 'confirm entry'
             io.to(session_id).emit('confirm entry', [new Message('bot', 'Your current selection. Type \'Yes\' if it\'s correct and \'No\' if it isn\'t'), current_selection])
         }
+        }
     }
     else if (state === 'confirm entry'){
         switch (msg.toLowerCase()){
+            case 'start':
+                io.to(session_id).emit('main menu', 'return to main menu')
+                state = ''
+                break;
+    
             case 'yes':
                 current_order.push(current_selection)
                 current_selection = []
@@ -59,6 +72,11 @@ async function handleSelection (socket, io, msg, items, user){
     }
     else if (state === 'add order'){
         switch (msg.toLowerCase()){
+            case 'start':
+                io.to(session_id).emit('main menu', 'return to main menu')
+                state = ''
+                break;
+            
             case 'yes':
                 state = 'food menu'
                 io.to(session_id).emit('items', [items, new Message('bot', 'Here is a list of items you can choose from. \n Make your selection by typing out the name of the item as shown below, seperated with commas')])
@@ -72,12 +90,24 @@ async function handleSelection (socket, io, msg, items, user){
         }
     }
     else if (state === 'address'){
-        address = msg
-        io.to(session_id).emit('confirm order', new Message('bot', 'Confirm order? type \'Yes\' to confirm, 0 to cancel order'))
-        state = 'confirm order'
+        switch (msg.toLowerCase()){
+            case 'start':
+                io.to(session_id).emit('main menu', 'return to main menu')
+                state = ''
+                break;
+            default:
+                address = msg
+                io.to(session_id).emit('confirm order', new Message('bot', 'Confirm order? type \'Yes\' to confirm, 0 to cancel order'))
+                state = 'confirm order'
+        }
     }
     else if (state === 'confirm order'){
        switch (msg.toLowerCase()){
+            case 'start':
+                io.to(session_id).emit('main menu', 'return to main menu')
+                state = ''
+                break;
+        
             case 'yes':
                 
                 const idsArr = current_order.map(order => order.map(({id}) => (id)))
@@ -183,6 +213,10 @@ async function handleSelection (socket, io, msg, items, user){
                     current_order = []
                     io.to(session_id).emit('cancel order', new Message('bot', "Your order has been cancelled"))
                 }
+                io.to(session_id).emit('main menu', 'return to main menu')
+                state = ''
+                break;
+            case 'start':
                 io.to(session_id).emit('main menu', 'return to main menu')
                 state = ''
                 break;

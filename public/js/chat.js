@@ -1,3 +1,4 @@
+
 let dateOptions = { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' }
 
 const form = document.getElementById('order-form')
@@ -20,14 +21,24 @@ sessionEnd.addEventListener('click', function(){
     
 })
 
+socket.on('disconnect', function (){
+    setTimeout(() => window.location = '/index.html', 5000)
+})
+
+socket.on("connect_error", (err) => {
+    console.log(err.data);
+})
+
+
 
 socket.on('message', function (msg){
-    outputMessage(msg, 'left')
+    setTimeout(() => outputMessage(msg, 'left'), 500)
 })
 
 socket.on('welcome', function (msg){
-    outputMessage(msg, 'left')
-    showMenue()
+    outputMessage(msg[0], 'left')
+    outputMessage(msg[1], 'left')
+    
 })
 
 socket.on('user input', function (msg){
@@ -35,49 +46,49 @@ socket.on('user input', function (msg){
 });
  
 socket.on('invalid input', function (msg){
-    outputMessage(msg, 'left')
+    setTimeout(() => outputMessage(msg, 'left'), 300)
 })
 
 socket.on('main menu', function (){
-    showMenue()
+    setTimeout(() => showMenue(), 1000)
 })
 
 socket.on('items', function (msg){
-    outputMessage(msg[1], 'left')
-    renderObjects(msg[0])
+    setTimeout(() => outputMessage(msg[1], 'left'), 500)
+    setTimeout(() => renderObjects(msg[0]), 800)  
 })
 
 socket.on('no selections', function (msg){
-    outputMessage(msg, 'left')
+    setTimeout(() => outputMessage(msg, 'left'), 500)
 })
 
 socket.on('confirm entry', function (msg){
-    outputMessage(msg[0], 'left')
-    renderObjects(msg[1])
+    setTimeout(() => outputMessage(msg[0], 'left'), 500)
+    setTimeout(() => renderObjects(msg[1]), 800)  
 })
 
 socket.on('redo order entry', function (msg){
-    outputMessage(msg, 'left')
+    setTimeout(() => outputMessage(msg, 'left'), 500)
 })
 
 socket.on('add order', function (msg){
-    outputMessage(msg, 'left')
+    setTimeout(() => outputMessage(msg, 'left'), 500)
 })
 
 socket.on('checkout', function (msg){
-    outputMessage(msg, 'left')
+    setTimeout(() => outputMessage(msg, 'left'), 500)
 })
 
 socket.on('address', function (msg){
-    outputMessage(msg, 'left')
+    setTimeout(() => outputMessage(msg, 'left'), 500)
 })
 
 socket.on('confirm order', function (msg){
-    outputMessage(msg, 'left')
+    setTimeout(() => outputMessage(msg, 'left'), 500)
 })
 
 socket.on('order confirmed', function (msg){
-    outputMessage(msg, 'left')
+    setTimeout(() => outputMessage(msg, 'left'), 500)
 })
 
 socket.on('order history', function (obj){
@@ -95,7 +106,10 @@ socket.on('order history', function (obj){
         </div>`
     )).join('')
     document.getElementById('messages').appendChild(div);    
-    window.scrollTo(0, document.body.scrollHeight);
+    
+    const chatWindow = document.getElementById('messages'); 
+    const xH = chatWindow.scrollHeight; 
+    chatWindow.scrollTo(0, xH);
 })
 
 socket.on('current order', function (msg){
@@ -110,7 +124,7 @@ socket.on('current order', function (msg){
 })
 
 socket.on('cancel order', function (msg){
-    outputMessage(msg, 'left')
+    setTimeout(() => outputMessage(msg, 'left'), 500)
 })
 
 
@@ -119,8 +133,11 @@ socket.on('ended-session', function (msg){
     div.classList.add('end-message')
     div.innerHTML = `<p>${msg}</p>`
     document.getElementById('messages').appendChild(div);
-    window.scrollTo(0, document.body.scrollHeight);
     sessionEnd.style.display = "none"
+
+    const chatWindow = document.getElementById('messages'); 
+    const xH = chatWindow.scrollHeight; 
+    chatWindow.scrollTo(0, xH);
 })
 
 function outputMessage (message, className){
@@ -130,7 +147,10 @@ function outputMessage (message, className){
     div.innerHTML = `<p class="meta">${message.username}<span> ${message.time} </span>
         </p><p>${message.text}</p>`
     document.getElementById('messages').appendChild(div);
-    window.scrollTo(0, document.body.scrollHeight);
+
+    const chatWindow = document.getElementById('messages'); 
+    const xH = chatWindow.scrollHeight; 
+    chatWindow.scrollTo(0, xH);
 }
 
 function showMenue (){
@@ -145,7 +165,10 @@ function showMenue (){
         <li>Select 0 to cancel order</li>
     </ul>`
     document.getElementById('messages').appendChild(div);
-    window.scrollTo(0, document.body.scrollHeight);
+
+    const chatWindow = document.getElementById('messages'); 
+    const xH = chatWindow.scrollHeight; 
+    chatWindow.scrollTo(0, xH);
 
     socket.emit('main menue', 'main menue displayed')
 }
@@ -160,7 +183,10 @@ function renderObjects (objArray){
         </div>`
     )).join('')
     document.getElementById('messages').appendChild(div);    
-    window.scrollTo(0, document.body.scrollHeight);
+   
+    const chatWindow = document.getElementById('messages'); 
+    const xH = chatWindow.scrollHeight; 
+    chatWindow.scrollTo(0, xH);
     
 }
 

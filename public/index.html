@@ -12,37 +12,26 @@
 <body>
     
     <div class="container">
-        
-        <form action="/session" method="POST" class="main-form">
-            <p class="form-headline">Please fill in the required fields to get started</p>
-            <div class="input-group">
-                <div class="input-field">
-                    <span class="material-symbols-outlined iconx">person</span>
-                    <input type="text" name="name" id="form-name" placeholder="Enter your name here...">
+        <div class="index-form">
+            <form action="/session" method="POST" class="main-form">
+                <p class="form-headline">Please fill in the required fields to get started</p>
+                <div class="input-group">
+                    <div class="input-field">
+                        <span class="material-symbols-outlined iconx">person</span>
+                        <input type="text" name="name" id="form-name" placeholder="Enter your name here..." required>
+                    </div>
                 </div>
-            </div>
-            <!-- <div class="input-group">
-                <div class="input-field">
-                    <span class="material-symbols-outlined iconx">alternate_email</span>
-                    <input type="text" name="email" id="form-email" placeholder="Enter a valid email address">
+                <div class="input-group">
+                    <div class="input-field">
+                        <span class="material-symbols-outlined iconx">call</span>
+                        <input type="tel" name="phone" id="phone" placeholder="Enter your phone number">
+                    </div>
                 </div>
-            </div> -->
-            <div class="input-group">
-                <div class="input-field">
-                    <span class="material-symbols-outlined iconx">call</span>
-                    <input type="tel" name="phone" id="phone" placeholder="Enter your phone number" maxlength="11">
+                <div class="input-group">
+                    <button type="submit" class="btn btn-outline-primary" id="proceed-btn">Proceed</button>
                 </div>
-            </div>
-            <!-- <div class="input-group">
-                <div class="input-field">
-                    <span class="material-symbols-outlined iconx">distance</span>
-                    <input type="text" name="address" id="form-address" placeholder="Enter Delivery address">
-                </div>
-            </div> -->
-            <div class="input-group">
-                <button type="submit" class="btn btn-outline-primary" id="proceed-btn">Proceed</button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
    
 </body>
