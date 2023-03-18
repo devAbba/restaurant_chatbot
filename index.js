@@ -54,11 +54,11 @@ app.use('/session', sessionRouter, (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.sendFile('index.html')
+    res.sendFile(path.join(__dirname, 'public', 'views', 'index.html'))
 })
 
 app.get('/chat', authenticate, async (req, res, next) => {
-    res.sendFile(path.join(__dirname, 'public', 'chat.html'))
+    res.sendFile(path.join(__dirname, 'public', 'views', 'chat.html'))
     try {
         const userDetail = await User.findById(req.session.user_info)
         myCache.set(req.session.user_info, userDetail, 60)
