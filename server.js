@@ -5,7 +5,7 @@ const sessionRouter = require('./routes/session.route');
 const http = require('http');
 const { Server } = require("socket.io");
 const path = require('path');
-const connectDB = require('./db/mongodb');
+const connectDB = require('./db/db');
 require('dotenv').config();
 const { authenticate, authConnection } = require('./middleware/authenticate');
 const cors = require('cors')
