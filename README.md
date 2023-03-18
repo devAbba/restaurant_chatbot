@@ -32,7 +32,7 @@ an option to place a new order
     - MONGO_URL
     - PORT
     - SECRET
-- run `npm run start-dev`
+- run `node server.js`
 
 ---
 
