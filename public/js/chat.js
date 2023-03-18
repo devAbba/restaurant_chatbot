@@ -22,13 +22,12 @@ sessionEnd.addEventListener('click', function(){
 })
 
 socket.on('disconnect', function (){
-    setTimeout(() => window.location = '/index.html', 5000)
+    setTimeout(() => window.location = '/', 5000)
 })
 
 socket.on("connect_error", (err) => {
     console.log(err.data);
 })
-
 
 
 socket.on('message', function (msg){

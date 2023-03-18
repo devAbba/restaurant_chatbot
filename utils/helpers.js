@@ -10,6 +10,7 @@ let current_order = []
 let address = ''
 
 async function handleSelection (socket, io, msg, items, user){
+  try {
     const userId = socket.request.session.user_info
     const session_id = socket.request.session.id
     
@@ -225,6 +226,9 @@ async function handleSelection (socket, io, msg, items, user){
 
         }
     }
+  } catch (err){
+
+  } 
 }
 
 module.exports = handleSelection
